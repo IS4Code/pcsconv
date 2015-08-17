@@ -1,0 +1,8 @@
+Test/
+Debug/
+Release/
+bin/
+obj/
+Thumbs.db
+*.bat
+*.sh

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 
 /*
@@ -169,7 +170,7 @@ namespace speakerconv
 			foreach(FieldInfo fi in typeof(DRORegister).GetFields(BindingFlags.Public | BindingFlags.Static))
 			{
 				DRORegister dr = (DRORegister)fi.GetValue(null);
-				DataSizeAttribute attr = fi.GetCustomAttribute(typeof(DataSizeAttribute)) as DataSizeAttribute;
+				DataSizeAttribute attr = fi.GetCustomAttributes(typeof(DataSizeAttribute), true).First() as DataSizeAttribute;
 				if(attr != null)
 				{
 					sizes[dr] = attr.Size;

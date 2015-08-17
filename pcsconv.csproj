@@ -7,7 +7,7 @@
     <OutputType>Exe</OutputType>
     <RootNamespace>speakerconv</RootNamespace>
     <AssemblyName>pcsconv</AssemblyName>
-    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <AllowUnsafeBlocks>False</AllowUnsafeBlocks>
     <NoStdLib>False</NoStdLib>
@@ -19,6 +19,7 @@
     <RunSourceAnalysis>False</RunSourceAnalysis>
     <SignAssembly>False</SignAssembly>
     <DelaySign>False</DelaySign>
+    <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Platform)' == 'x86' ">
     <PlatformTarget>x86</PlatformTarget>

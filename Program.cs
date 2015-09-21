@@ -15,23 +15,28 @@ using System.Linq;
 using System.Reflection;
 using System.Text.RegularExpressions;
 using System.Threading;
+using IllidanS4.Wave;
 
 namespace speakerconv
 {
 	partial class Program
 	{
-		static readonly Dictionary<string, InputProcessor> InputProcessors = new Dictionary<string, InputProcessor>{
+		static readonly Dictionary<string, IInputProcessor> InputProcessors = new Dictionary<string, IInputProcessor>{
 			{"pcs", new LoadPCS()},
 			{"mdt", new LoadMDT()},
 			{"bin", new LoadMDT()},
-			{"txt", new LoadTXT()}
+			{"txt", new LoadTXT()},
+			{"dp", new LoadSaveDP()}
 		};
 		
-		static readonly Dictionary<string, OutputProcessor> OutputProcessors = new Dictionary<string, OutputProcessor>{
+		static readonly Dictionary<string, IOutputProcessor> OutputProcessors = new Dictionary<string, IOutputProcessor>{
 			{"dro", new SaveDRO()},
-			{"play", new PlayBeep()},
+			{"beep", new PlayBeep()},
+			{"play", new PlayWAV()},
+			{"wav", new SaveWAV()},
 			{"droplay", new PlayDRO()},
-			{"txt", new SaveTXT()}
+			{"txt", new SaveTXT()},
+			{"dp", new LoadSaveDP()}
 		};
 		
 		public static void Main(string[] args)
@@ -86,7 +91,9 @@ namespace speakerconv
 						case "/c":case "-c":case "--crop":
 							options.Crop = true;
 							en.MoveNext();
-							options.CropSimilarity = Int32.Parse(en.Current, CultureInfo.InvariantCulture);
+							int sim = Int32.Parse(en.Current, CultureInfo.InvariantCulture);
+							if(sim == -1) sim = Int32.MaxValue;
+							options.CropSimilarity = sim;
 							break;
 						case "/l":case "-l":case "--length":
 							options.TrimLength = true;
@@ -143,7 +150,7 @@ namespace speakerconv
 					Console.WriteLine("Usage: pcsconv [options] [input path] [output path]");
 					Console.WriteLine("Command-line arguments:");
 					Console.WriteLine("  -? -h --help                      -- Shows this help.");
-					Console.WriteLine("  -w --waveform [type]              -- Sets waveform type (default 2).");
+					Console.WriteLine("  -w --waveform [type]              -- Sets waveform type (default 2 for DRO and 4 for WAVE).");
 					Console.WriteLine("  -o --opldata [register:value:...] -- Additional OPL commands.");
 					Console.WriteLine("  -t --trim                         -- Trims delays from start and end.");
 					Console.WriteLine("  -f --filter                       -- Removes unnecessary sound noises.");
@@ -159,11 +166,15 @@ namespace speakerconv
 					Console.WriteLine(" pcs - RPC text output from the modified DOSBox version.");
 					Console.WriteLine(" mdt/bin - Binary output from MIDITONES.");
 					Console.WriteLine(" txt - simple RPC commands.");
+					Console.WriteLine(" dp - Doom PC Speaker.");
 					Console.WriteLine("Output types:");
 					Console.WriteLine(" dro - DOSBox Raw OPL.");
 					Console.WriteLine(" droplay - DRO and plays it with 'dro_player' (needs to be available).");
-					Console.WriteLine(" play - Plays using console beeps.");
+					Console.WriteLine(" beep - Plays using console beeps.");
+					Console.WriteLine(" wav - WAVE.");
+					Console.WriteLine(" play - Plays using WAVE.");
 					Console.WriteLine(" txt - simple RPC commands.");
+					Console.WriteLine(" dp - Doom PC Speaker.");
 					return null;
 				}else{
 					Error((errorArg != null && (errorArg.StartsWith("-")||errorArg.StartsWith("/"))?errorArg+": ":"")+ex.Message+" Try --help.");

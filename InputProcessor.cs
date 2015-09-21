@@ -12,7 +12,7 @@ using System.IO;
 
 namespace speakerconv
 {
-	public abstract class InputProcessor
+	public abstract class InputProcessor : IInputProcessor
 	{
 		public InputProcessor()
 		{
@@ -28,5 +28,11 @@ namespace speakerconv
 				return ProcessStream(stream, options);
 			}
 		}
+	}
+	
+	public interface IInputProcessor
+	{
+		IList<OutputFile> ProcessStream(Stream input, ConvertOptions options);
+		IList<OutputFile> ProcessFile(string file, ConvertOptions options);
 	}
 }

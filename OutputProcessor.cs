@@ -11,7 +11,7 @@ using System.Collections.Generic;
 
 namespace speakerconv
 {
-	public abstract class OutputProcessor
+	public abstract class OutputProcessor : IOutputProcessor
 	{
 		public OutputProcessor()
 		{
@@ -24,5 +24,11 @@ namespace speakerconv
 		}
 		
 		public abstract void ProcessFile(OutputFile file, ConvertOptions options);
+	}
+	
+	public interface IOutputProcessor
+	{
+		void ProcessFile(OutputFile file, ConvertOptions options);
+		void ProcessFiles(IEnumerable<OutputFile> files, ConvertOptions options);
 	}
 }

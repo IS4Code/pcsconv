@@ -178,9 +178,14 @@ namespace speakerconv
 			return Math.Pow(2, (note-69)/12d)*440;
 		}
 		
-		private static int FrequencyToCountdown(double freq)
+		public static int FrequencyToCountdown(double freq)
 		{
 			return (int)Math.Round(1193180/freq);
+		}
+		
+		public static double CountdownToFrequency(int cd)
+		{
+			return Math.Round(1193180.0/cd);
 		}
 		
 		private static int NoteToCountdown(int note)

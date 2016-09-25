@@ -67,6 +67,9 @@ namespace speakerconv
 										if(diff == 3)
 										{
 											commands.Add(new EnableCommand((value & 3) == 3, time));
+										}else if(diff == 51)
+										{
+											commands.Add(new EnableCommand(false, time));
 										}
 									}
 									break;
@@ -198,7 +201,9 @@ namespace speakerconv
 			if(options.Split)
 			{
 				bool playing = false;
-				files = rpc.Split(c => c.Type == RPCCommandType.SetCountdown ? (playing = true) && false : c.Type == RPCCommandType.ClearCountdown ? (playing = false) && false : c.Type == RPCCommandType.Delay ? c.Data >= options.SplitDelay*1000 && !playing : false).Select((d,i) => new OutputFile(Path.ChangeExtension(Path.ChangeExtension(options.OutputPath, null)+i.ToString("000"), options.Extension), d)).ToList();
+				files = rpc.Split(
+					c => c.Type == RPCCommandType.SetCountdown ? (playing = true) && false : c.Type == RPCCommandType.ClearCountdown ? (playing = false) && false : c.Type == RPCCommandType.Delay ? c.Data >= options.SplitDelay*1000 && !playing : false
+				).Select((d,i) => new OutputFile(Path.ChangeExtension(Path.ChangeExtension(options.OutputPath, null)+i.ToString("000"), options.Extension), d)).ToList();
 			}else{
 				files = new[]{new OutputFile(options.OutputPath, rpc)};
 			}

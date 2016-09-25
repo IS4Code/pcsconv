@@ -16,15 +16,16 @@ namespace speakerconv
 		{
 			using(var stream = new FileStream(file.Path, FileMode.Create))
 			{
-				Writer.WriteWave(stream, CreateSong(file.Data, GetWaveform(options)));
+				Writer.SampleRate = options.Wave_Frequency??44100;
+				Writer.WriteWave(stream, CreateSong(file.Data, GetWaveform(options), options.Wave_Volume??1.0, options.Wave_Clip??false, options.Wave_Frequency??44100));
 			}
 		}
 		
 		public static WaveFunction GetWaveform(ConvertOptions options)
 		{
-			if(options.DRO_Waveform.HasValue)
+			if(options.Waveform.HasValue)
 			{
-				switch(options.DRO_Waveform.Value)
+				switch(options.Waveform.Value)
 				{
 					case 0:
 						return WaveFunction.Sine;
@@ -40,16 +41,26 @@ namespace speakerconv
 						return WaveFunction.Triangle;
 					case 6:
 						return WaveFunction.Circle;
+					case 7:
+						return WaveFunction.AbsCircle;
+					case 8:
+						return WaveFunction.Sawtooth;
+					case 9:
+						return WaveFunction.Clausen;
+					case 10:
+						return WaveFunction.SineDouble;
 				}
 			}else{
 				return WaveFunction.Square;
 			}
 		}
 		
-		public static short[] CreateSong(IList<RPCCommand> data, WaveFunction waveType)
+		public static short[] CreateSong(IList<RPCCommand> data, WaveFunction waveType, double volume, bool clip, int frequency)
 		{
 			var song = new WaveSong();
-			song.Volume = 0.25;
+			song.NoClipping = !clip;
+			song.Volume = volume;
+			
 			int time = 0;
 			var channels = new Dictionary<int,WaveSong.Track>();
 			foreach(var cmd in data)
@@ -89,7 +100,7 @@ namespace speakerconv
 			{
 				playing.Wave.Duration = time-playing.Start;
 			}
-			return song.GetSamples();
+			return song.GetSamples<short>(frequency);
 		}
 	}
 }

@@ -36,7 +36,7 @@
     <CheckForOverflowUnderflow>True</CheckForOverflowUnderflow>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <StartAction>Project</StartAction>
-    <StartArguments>4x4.txt -in pcs -out play -w 6</StartArguments>
+    <StartArguments>-in pcs -out dro frogger2.txt frogger2/frog.dro -t -w:v 0.25 -s 1 -w 0</StartArguments>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
     <OutputPath>bin\Release\</OutputPath>
@@ -67,6 +67,7 @@
       <DependentUpon>Program.cs</DependentUpon>
     </Compile>
     <Compile Include="InputProcessor.cs" />
+    <Compile Include="LoadMIDI.cs" />
     <Compile Include="LoadSaveDP.cs" />
     <Compile Include="LoadMDT.cs" />
     <Compile Include="LoadPCS.cs" />
@@ -81,6 +82,7 @@
     <Compile Include="RPC.cs" />
     <Compile Include="SaveDRO.cs" />
     <Compile Include="OutputProcessor.cs" />
+    <Compile Include="SaveMON.cs" />
     <Compile Include="SaveTXT.cs" />
     <Compile Include="SaveWAV.cs" />
     <Compile Include="Wave.cs" />

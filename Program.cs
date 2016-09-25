@@ -26,7 +26,7 @@ namespace speakerconv
 			{"mdt", new LoadMDT()},
 			{"bin", new LoadMDT()},
 			{"txt", new LoadTXT()},
-			{"dp", new LoadSaveDP()}
+			{"dp", new LoadSaveDP()},
 		};
 		
 		static readonly Dictionary<string, IOutputProcessor> OutputProcessors = new Dictionary<string, IOutputProcessor>{
@@ -36,11 +36,36 @@ namespace speakerconv
 			{"wav", new SaveWAV()},
 			{"droplay", new PlayDRO()},
 			{"txt", new SaveTXT()},
-			{"dp", new LoadSaveDP()}
+			{"dp", new LoadSaveDP()},
 		};
 		
 		public static void Main(string[] args)
 		{
+			/*WaveSong sng = new WaveSong{Volume = 0.5};
+			var arr = new[]{
+				WaveFunction.Sine, WaveFunction.AbsSine, WaveFunction.HalfSine, WaveFunction.HalfAbsSine, WaveFunction.Square, WaveFunction.Triangle, WaveFunction.AbsTriangle, WaveFunction.Circle, WaveFunction.AbsCircle
+			};
+			for(int i = 0; i < arr.Length; i++)
+			{
+				sng.AddWave(i*5000, new Wave(440, 4000){Type = new WaveFunction(x => Math.Pow(x, 1.04)) | arr[i]});
+			}
+			var writer = new WaveWriter();
+			writer.WriteWave(new FileStream("wave.wav", FileMode.Create), sng.GetSamples());*/
+			//var func = WaveFunction.AbsCircle;
+			//var func = new WaveFunction(x => Math.Round(x*6)/6.0) | WaveFunction.Sine;
+			//var func = new WaveFunction(x => Math.Max(Math.Min(Math.Tan(x*10)/10, 1.0), -1.0));
+			//new WaveWriter().WriteWave(new FileStream("wave.wav", FileMode.Create), new WavePlayer().CreateWave(new Wave(440, 1000, func)));
+			//new WavePlayer().PlayWave(new Wave(440, 1000, func));
+			/*var song = new WaveSong();
+			for(int i = 1; i <= 10; i++)
+			{
+				song.AddWave(0, new Wave(220*i, 1000));
+			}
+			song.Volume = 0.1;
+			new WavePlayer().PlayWave(song);
+			//new WaveWriter().WriteWave(new FileStream("wave.wav", FileMode.Create), new WavePlayer().CreateWave(song));
+			Console.ReadKey(true);
+			return;*/
 			var options = ReadArguments(args);
 			if(options == null) return;
 			foreach(var option in options.GetInputs())
@@ -67,7 +92,7 @@ namespace speakerconv
 					{
 						case "/w":case "-w":case "--waveform":
 							en.MoveNext();
-							options.DRO_Waveform = Int32.Parse(en.Current, CultureInfo.InvariantCulture);
+							options.Waveform = Int32.Parse(en.Current, CultureInfo.InvariantCulture);
 							break;
 						case "/o":case "-o":case "--opldata":
 							en.MoveNext();
@@ -121,6 +146,17 @@ namespace speakerconv
 						case "/out":case "-out":case "--output-type":
 							en.MoveNext();
 							options.OutputType = en.Current;
+							break;
+						case "/w:c":case "-w:c":case "--wave-clip":
+							options.Wave_Clip = true;
+							break;
+						case "/w:v":case "-w:v":case "--wave-volume":
+							en.MoveNext();
+							options.Wave_Volume = Double.Parse(en.Current, CultureInfo.InvariantCulture);
+							break;
+						case "/w:r":case "-w:r":case "--wave-sample-rate":
+							en.MoveNext();
+							options.Wave_Frequency = Int32.Parse(en.Current, CultureInfo.InvariantCulture);
 							break;
 						case "?":case "/?":case "-?":case "/h":case "-h":case "--help":
 							throw helpException;
@@ -223,8 +259,12 @@ namespace speakerconv
 		
 		public bool DRO_Optimize{get;set;}
 		public List<DROCommand> DRO_PrefixCommands{get;private set;}
-		public int? DRO_Waveform{get;set;}
+		public int? Waveform{get;set;}
 		public int DRO_EndDelay{get;set;}
+		
+		public double? Wave_Volume{get;set;}
+		public bool? Wave_Clip{get;set;}
+		public int? Wave_Frequency{get;set;}
 		
 		public ConvertOptions()
 		{

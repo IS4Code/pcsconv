@@ -10,6 +10,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
 
 namespace speakerconv
 {
@@ -32,7 +33,7 @@ namespace speakerconv
 					dro.Add(new DROCommand(0x60 + oper1[i] + 3, 0xF0));
 					dro.Add(new DROCommand(0x80 + oper1[i], 0x77));
 					dro.Add(new DROCommand(0x80 + oper1[i] + 3, 0x77));
-					dro.Add(new DROCommand(0xE0 + oper1[i], options.DRO_Waveform ?? 2));
+					dro.Add(new DROCommand(0xE0 + oper1[i], options.Waveform ?? 2));
 				}
 			}else{
 				dro.Add(new DROCommand(0x20, 0x01));
@@ -43,7 +44,7 @@ namespace speakerconv
 				dro.Add(new DROCommand(0x63, 0xF0));
 				dro.Add(new DROCommand(0x80, 0x77));
 				dro.Add(new DROCommand(0x83, 0x77));
-				dro.Add(new DROCommand(0xE0, options.DRO_Waveform ?? 2));
+				dro.Add(new DROCommand(0xE0, options.Waveform ?? 2));
 			}
 			if(options.DRO_PrefixCommands != null) dro.AddRange(options.DRO_PrefixCommands);
 			
@@ -118,7 +119,7 @@ namespace speakerconv
 			
 			int bytesize = dro.Sum(cmd => cmd.Length);
 			int timesize = dro.Sum(cmd => cmd.DelayValue);
-			using(BinaryWriter writer = new BinaryWriter(new FileStream(file.Path, FileMode.Create)))
+			using(BinaryWriter writer = new BinaryWriter(new FileStream(file.Path, FileMode.Create), Encoding.ASCII))
 			{
 				writer.Write("DBRAWOPL".ToCharArray());
 				writer.Write((short)0);

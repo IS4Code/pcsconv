@@ -95,6 +95,7 @@ namespace speakerconv
 							}else{ //Delay
 								byte next = reader.ReadByte();
 								int delay = (command<<8)|next;
+								//if(delay == 0) delay = 50;
 								time += delay;
 								rpc.Add(RPCCommand.Delay(delay));
 							}
@@ -173,7 +174,7 @@ namespace speakerconv
 			return Math.Sqrt(normal.Average(ch => ch.Frequency*ch.Frequency));
 		}*/
 		
-		private static double NoteToFrequency(int note)
+		public static double NoteToFrequency(int note)
 		{
 			return Math.Pow(2, (note-69)/12d)*440;
 		}
@@ -188,7 +189,7 @@ namespace speakerconv
 			return Math.Round(1193180.0/cd);
 		}
 		
-		private static int NoteToCountdown(int note)
+		public static int NoteToCountdown(int note)
 		{
 			return FrequencyToCountdown(NoteToFrequency(note));
 		}

@@ -277,6 +277,33 @@ namespace speakerconv
 				}
 			}
 			
+			if(options.Optimize)
+			{
+				foreach(var file in files)
+				{
+					var data = file.Data;
+					
+					int? lastfreq = null;
+					for(int i = 0; i < data.Count; i++)
+					{
+						var cmd = data[i];
+						if(cmd.Type == RPCCommandType.SetCountdown)
+						{
+							if(lastfreq == cmd.Data)
+							{
+								data.RemoveAt(i);
+								i -= 1;
+							}else{
+								lastfreq = cmd.Data;
+							}
+						}else if(cmd.Type == RPCCommandType.ClearCountdown)
+						{
+							lastfreq = null;
+						}
+					}
+				}
+			}
+			
 			return files;
 		}
 	}

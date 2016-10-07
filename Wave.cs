@@ -157,11 +157,18 @@ namespace IllidanS4.Wave
 	{
 		public WaveFunction Type{get;set;}
 		public double Frequency{get;set;}
+		public double PhaseShiftCoef{get;set;}
 		public new double Duration{get;set;}
 		public WaveFunction FadeIn{get;set;}
 		public double FadeInDuration{get;set;}
 		public WaveFunction FadeOut{get;set;}
 		public double FadeOutDuration{get;set;}
+		
+		public double RemainingPhaseShift{
+			get{
+				return (Duration*Frequency/1000)%1+PhaseShiftCoef;
+			}
+		}
 		
 		protected override double GetDuration()
 		{
@@ -192,7 +199,7 @@ namespace IllidanS4.Wave
 		
 		private double WaveFunc(double x)
 		{
-			double y = Volume*Type[x*Frequency];
+			double y = Volume*Type[x*Frequency+PhaseShiftCoef];
 			x *= 1000;
 			if(FadeIn != null)
 			{
@@ -406,8 +413,8 @@ namespace IllidanS4.Wave
 			double rateDouble = sampleRate;
 	        foreach(var wave in Waves)
 	        {
-	        	int sampleStart = (int)(wave.Start/1000.0*sampleRate);
-	        	int sampleLength = (int)(wave.Wave.Duration/1000.0*sampleRate);
+	        	int sampleStart = (int)Math.Round(wave.Start/1000.0*sampleRate);
+	        	int sampleLength = (int)Math.Round(wave.Wave.Duration/1000.0*sampleRate);
 	        	var waveFunc = wave.Wave.ToFunction();
 	        	for(int i = 0; i < sampleLength; i++)
 	        	{

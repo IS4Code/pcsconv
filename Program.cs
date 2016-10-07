@@ -66,6 +66,8 @@ namespace speakerconv
 			//new WaveWriter().WriteWave(new FileStream("wave.wav", FileMode.Create), new WavePlayer().CreateWave(song));
 			Console.ReadKey(true);
 			return;*/
+			var ass = Assembly.GetExecutingAssembly().GetName();
+			Console.WriteLine(ass.Name+" "+ass.Version.ToString(2)+" (c) 2013 - 2016 by IllidanS4@gmail.com");
 			var options = ReadArguments(args);
 			if(options == null) return;
 			foreach(var option in options.GetInputs())
@@ -129,7 +131,7 @@ namespace speakerconv
 							options.DRO_EndDelay = 200;
 							break;
 						case "/n":case "-n":case "--no-optimalization":
-							options.DRO_Optimize = false;
+							options.Optimize = false;
 							break;
 						case "/m":case "-m":case "--multichannel":
 							options.MultiChannel = true;
@@ -181,8 +183,6 @@ namespace speakerconv
 			{
 				if(ex == helpException)
 				{
-					var ass = Assembly.GetExecutingAssembly().GetName();
-					Console.WriteLine(ass.Name+" "+ass.Version.ToString(2)+" (c) 2013 - 2015 by IllidanS4@gmail.com");
 					Console.WriteLine("Usage: pcsconv [options] [input path] [output path]");
 					Console.WriteLine("Command-line arguments:");
 					Console.WriteLine("  -? -h --help                      -- Shows this help.");
@@ -257,7 +257,7 @@ namespace speakerconv
 		public bool Repeat{get;set;}
 		public int RepeatCount{get;set;}
 		
-		public bool DRO_Optimize{get;set;}
+		public bool Optimize{get;set;}
 		public List<DROCommand> DRO_PrefixCommands{get;private set;}
 		public int? Waveform{get;set;}
 		public int DRO_EndDelay{get;set;}
@@ -273,7 +273,7 @@ namespace speakerconv
 			SplitDelay = Double.MaxValue;
 			CropSimilarity = Int32.MaxValue;
 			FilterDelay = 0.0;
-			DRO_Optimize = true;
+			Optimize = true;
 			DRO_PrefixCommands = new List<DROCommand>();
 		}
 		

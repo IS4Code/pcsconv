@@ -75,11 +75,13 @@ namespace speakerconv
 						double freq = LoadMDT.CountdownToFrequency(cmd.Data);
 						if(!channels.TryGetValue(cmd.Channel, out playing) || playing.Wave.Frequency != freq)
 						{
+							double phase = 0;
 							if(playing.Wave != null)
 							{
 								playing.Wave.Duration = time-playing.Start;
+								phase = playing.Wave.RemainingPhaseShift;
 							}
-							playing = new WaveSong.Track(time, new Wave(freq, 0){Type = waveType});
+							playing = new WaveSong.Track(time, new Wave(freq, 0){Type = waveType, PhaseShiftCoef = phase});
 							song.Waves.Add(playing);
 							channels[cmd.Channel] = playing;
 						}

@@ -85,7 +85,7 @@ namespace speakerconv
 			
 			if(options.DRO_EndDelay > 0) dro.AddRange(DROCommand.Delay(options.DRO_EndDelay));
 			
-			if(options.DRO_Optimize)
+			if(options.Optimize)
 			{
 				byte?[] registers = new byte?[0xFF];
 				for(int i = 0; i < dro.Count; i++)

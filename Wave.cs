@@ -414,7 +414,8 @@ namespace IllidanS4.Wave
 	        foreach(var wave in Waves)
 	        {
 	        	int sampleStart = (int)Math.Round(wave.Start/1000.0*sampleRate);
-	        	int sampleLength = (int)Math.Round(wave.Wave.Duration/1000.0*sampleRate);
+	        	int sampleLength = (int)Math.Floor(wave.Wave.Duration/1000.0*sampleRate);
+	        	sampleLength = Math.Min(sampleLength, samples.Length-sampleStart);
 	        	var waveFunc = wave.Wave.ToFunction();
 	        	for(int i = 0; i < sampleLength; i++)
 	        	{

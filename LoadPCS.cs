@@ -96,6 +96,8 @@ namespace speakerconv
 			int lasttime = 0;
 			FrequencyMode freqmode = 0;
 			
+			int? setcountdown = null;
+			
 			var e = commands.GetEnumerator();
 			while(e.MoveNext())
 			{
@@ -116,6 +118,10 @@ namespace speakerconv
 					if(enabled == false)
 					{
 						rpc.Add(RPCCommand.ClearCountdown());
+					}else if(setcountdown != null)
+					{
+						rpc.Add(new RPCCommand(RPCCommandType.SetCountdown, setcountdown.Value));
+						setcountdown = null;
 					}
 				}else if(e.Current is FrequencyModeCommand)
 				{
@@ -128,8 +134,14 @@ namespace speakerconv
 						e.MoveNext();
 						try{
 							countdown |= ((FrequencyByte2Command)e.Current).Value << 8;
-							if(countdown != 0)
-								/*if(enabled) */rpc.Add(new RPCCommand(RPCCommandType.SetCountdown, countdown));
+							//if(countdown != 0)
+								// /*if(enabled) */rpc.Add(new RPCCommand(RPCCommandType.SetCountdown, countdown));
+							if(enabled)
+							{
+								rpc.Add(new RPCCommand(RPCCommandType.SetCountdown, countdown));
+							}else{
+								setcountdown = countdown;
+							}
 						}catch(InvalidCastException)
 						{
 							Program.Error("Missing countdown pair for $42.");
@@ -147,9 +159,26 @@ namespace speakerconv
 		
 		public static IList<OutputFile> ProcessRPC(List<RPCCommand> rpc, ConvertOptions options)
 		{
+			bool informed = false;
+			
 			for(int i = 0; i < rpc.Count; i++)
 			{
 				var cmd = rpc[i];
+				if(cmd.Type == RPCCommandType.SetCountdown)
+				{
+					if(cmd.Data <= 36 || cmd.Data > 32248)
+					{
+						if(options.PCS_Sanitize)
+						{
+							rpc.RemoveAt(i);
+							i -= 1;
+						}else if(!informed)
+						{
+							informed = true;
+							Console.WriteLine("Input contains frequencies outside the hearing range, use --sanitize to remove them.");
+						}
+					}
+				}
 				if(cmd.Type == RPCCommandType.Delay && cmd.Data == 0)
 				{
 					rpc.RemoveAt(i);
@@ -172,7 +201,7 @@ namespace speakerconv
 				}
 			}
 			
-			if(options.Trim)
+			if(options.PCS_Trim)
 			{
 				for(int i = 0; i < rpc.Count; i++)
 				{
@@ -198,17 +227,17 @@ namespace speakerconv
 			}
 			
 			IList<OutputFile> files;
-			if(options.Split)
+			if(options.PCS_Split)
 			{
 				bool playing = false;
 				files = rpc.Split(
-					c => c.Type == RPCCommandType.SetCountdown ? (playing = true) && false : c.Type == RPCCommandType.ClearCountdown ? (playing = false) && false : c.Type == RPCCommandType.Delay ? c.Data >= options.SplitDelay*1000 && !playing : false
+					c => c.Type == RPCCommandType.SetCountdown ? (playing = true) && false : c.Type == RPCCommandType.ClearCountdown ? (playing = false) && false : c.Type == RPCCommandType.Delay ? c.Data >= options.PCS_SplitDelay*1000 && !playing : false
 				).Select((d,i) => new OutputFile(Path.ChangeExtension(Path.ChangeExtension(options.OutputPath, null)+i.ToString("000"), options.Extension), d)).ToList();
 			}else{
 				files = new[]{new OutputFile(options.OutputPath, rpc)};
 			}
 			
-			if(options.Crop)
+			if(options.PCS_Crop)
 			{
 				foreach(var file in files)
 				{
@@ -233,7 +262,7 @@ namespace speakerconv
 							if(left.Type != right.Type) break;
 							if(left.Type == RPCCommandType.SetCountdown ? left.Data != right.Data : false) break;
 							if(left.Type == RPCCommandType.Delay ? right.Data < left.Data-2 || right.Data > left.Data+2 : false) break;
-							if(j-i > options.CropSimilarity || (j == data.Count-3 && j-i > 5))
+							if(j-i > options.PCS_CropSimilarity || (j == data.Count-3 && j-i > 5))
 							{
 								data.RemoveRange(i, data.Count-i);
 							}
@@ -242,7 +271,7 @@ namespace speakerconv
 				}
 			}
 			
-			if(options.TrimLength)
+			if(options.PCS_TrimLength)
 			{
 				foreach(var file in files)
 				{
@@ -254,9 +283,9 @@ namespace speakerconv
 						if(cmd.Type == RPCCommandType.Delay)
 						{
 							time += cmd.Data;
-							if(time > options.NewLength)
+							if(time > options.PCS_NewLength)
 							{
-								data[i] = new RPCCommand(cmd.Type, cmd.Channel, cmd.DelayValue-(time-options.NewLength));
+								data[i] = new RPCCommand(cmd.Type, cmd.Channel, cmd.DelayValue-(time-options.PCS_NewLength));
 								data.RemoveRange(i+1, data.Count-(i+1));
 								data.Add(RPCCommand.ClearCountdown());
 							}
@@ -265,17 +294,18 @@ namespace speakerconv
 				}
 			}
 			
-			if(options.Repeat)
+			if(options.PCS_Repeat)
 			{
 				foreach(var file in files)
 				{
 					var data = new List<RPCCommand>(file.Data);
-					for(int i = 0; i < options.RepeatCount-1; i++)
+					for(int i = 0; i < options.PCS_RepeatCount-1; i++)
 					{
 						file.Data.AddRange(data);
 					}
 				}
 			}
+			
 			
 			if(options.Optimize)
 			{
@@ -289,8 +319,9 @@ namespace speakerconv
 						var cmd = data[i];
 						if(cmd.Type == RPCCommandType.SetCountdown)
 						{
-							if(lastfreq == cmd.Data)
+							if(lastfreq != null && Math.Abs(lastfreq.Value-cmd.Data) <= 1)
 							{
+								lastfreq = cmd.Data;
 								data.RemoveAt(i);
 								i -= 1;
 							}else{
@@ -299,6 +330,38 @@ namespace speakerconv
 						}else if(cmd.Type == RPCCommandType.ClearCountdown)
 						{
 							lastfreq = null;
+						}
+					}
+				}
+			}
+			
+			if(options.OutputType == "dro")
+			{
+				//Separates pairs of SetCountdown/ClearCountdown by a Delay: 0
+				//Required for DRO rendering
+				
+				foreach(var file in files)
+				{
+					var data = file.Data;
+					
+					bool isclick = false;
+					for(int i = 0; i < data.Count; i++)
+					{
+						var cmd = data[i];
+						if(cmd.Type == RPCCommandType.SetCountdown)
+						{
+							isclick = true;
+						}else if(cmd.Type == RPCCommandType.Delay)
+						{
+							isclick = false;
+						}else if(cmd.Type == RPCCommandType.ClearCountdown)
+						{
+							if(isclick)
+							{
+								data.Insert(i, RPCCommand.Delay(0));
+								i += 1;
+							}
+							isclick = false;
 						}
 					}
 				}

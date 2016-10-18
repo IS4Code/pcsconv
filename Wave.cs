@@ -320,6 +320,10 @@ namespace IllidanS4.Wave
 			get; set;
 		}
 		
+		public bool RemovePeaks{
+			get; set;
+		}
+		
 		public override double Duration{
 			get{
 				return GetDuration();
@@ -329,6 +333,7 @@ namespace IllidanS4.Wave
 		public WaveBase()
 		{
 			Volume = 1.0;
+			RemovePeaks = true;
 		}
 		
 		protected abstract double GetDuration();
@@ -338,6 +343,16 @@ namespace IllidanS4.Wave
 			var sampleSize = (ulong)(sampleRate * GetDuration() / 1000);
 			double[] samples = new double[sampleSize];
 			WriteSamples(sampleRate, samples);
+			if(RemovePeaks)
+			{
+				for(int i = 1; i < samples.Length-1; i++)
+				{
+					if(samples[i-1] == samples[i+1])
+					{
+						samples[i] = samples[i-1];
+					}
+				}
+			}
 			if(NoClipping)
 			{
 				double max = 1.0;
@@ -390,7 +405,7 @@ namespace IllidanS4.Wave
 			double rateDouble = sampleRate;
 	        foreach(var wave in Waves)
 	        {
-	        	int sampleStart = (int)Math.Round(wave.Start/1000.0*sampleRate);
+	        	int sampleStart = (int)Math.Ceiling(wave.Start/1000.0*sampleRate);
 	        	int sampleLength = (int)Math.Floor(wave.Wave.Duration/1000.0*sampleRate);
 	        	sampleLength = Math.Min(sampleLength, samples.Length-sampleStart);
 	        	var waveFunc = wave.Wave.ToFunction();

@@ -17,7 +17,7 @@ namespace speakerconv
 			using(var stream = new FileStream(file.Path, FileMode.Create))
 			{
 				Writer.SampleRate = options.Wave_Frequency??44100;
-				Writer.WriteWave(stream, CreateSong(file.Data, GetWaveform(options), options.Wave_Volume??1.0, options.Wave_Clip??false, options.Wave_Frequency??44100));
+				Writer.WriteWave(stream, CreateSong(file.Data, GetWaveform(options), options.Wave_Volume??1.0, options.Wave_Clip??false, options.Wave_Frequency??44100, options.ClickLength));
 			}
 		}
 		
@@ -55,12 +55,14 @@ namespace speakerconv
 			}
 		}
 		
-		public static short[] CreateSong(IList<RPCCommand> data, WaveFunction waveType, double volume, bool clip, int frequency)
+		public static short[] CreateSong(IList<RPCCommand> data, WaveFunction waveType, double volume, bool clip, int frequency, double? clickLength)
 		{
 			var song = new WaveSong();
 			song.NoClipping = !clip;
 			song.Volume = volume;
 			
+			
+			bool informed = false;
 			int time = 0;
 			var channels = new Dictionary<int,WaveSong.Track>();
 			foreach(var cmd in data)
@@ -92,6 +94,17 @@ namespace speakerconv
 							if(playing.Wave != null)
 							{
 								playing.Wave.Duration = time-playing.Start;
+								if(playing.Wave.Duration == 0)
+								{
+									if(clickLength != null)
+									{
+										playing.Wave.Duration = 1000*clickLength.Value/playing.Wave.Frequency;
+									}else if(!informed)
+									{
+										Console.WriteLine("Song contains zero-length waves. Use --clicks 0.5 to render them as clicks.");
+										informed = true;
+									}
+								}
 							}
 							channels.Remove(cmd.Channel);
 						}

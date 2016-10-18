@@ -48,6 +48,7 @@ namespace speakerconv
 			}
 			if(options.DRO_PrefixCommands != null) dro.AddRange(options.DRO_PrefixCommands);
 			
+			bool informed = false;
 			foreach(var cmd in file.Data)
 			{
 				if(cmd.Channel > 8)
@@ -57,7 +58,22 @@ namespace speakerconv
 				switch(cmd.Type)
 				{
 					case RPCCommandType.Delay:
-						dro.AddRange(DROCommand.Delay(cmd.Data));
+						if(cmd.Data == 0)
+						{
+							if(options.ClickLength != null)
+							{
+								dro.AddRange(DROCommand.Delay(Math.Max(1, (int)Math.Round(options.ClickLength.Value))));
+							}else{
+								if(!informed)
+								{
+									Console.WriteLine("Song contains zero-length waves. Use --clicks 1 to render them as clicks.");
+									informed = true;
+								}
+								dro.AddRange(DROCommand.Delay(cmd.Data));
+							}
+						}else{
+							dro.AddRange(DROCommand.Delay(cmd.Data));
+						}
 						break;
 					case RPCCommandType.SetCountdown:
 						double frequency = 1193180.0/cmd.Data;

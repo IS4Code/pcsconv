@@ -103,29 +103,29 @@ namespace speakerconv
 							options.DRO_PrefixCommands.AddRange(ssplit.Select((s,i) => new{Index = i, Value = Byte.Parse(s, NumberStyles.HexNumber)}).GroupBy(x => x.Index / 2).Select(p => new DROCommand(p.ElementAt(0).Value, p.ElementAt(1).Value)));
 							break;
 						case "/t":case "-t":case "--trim":
-							options.Trim = true;
+							options.PCS_Trim = true;
 							break;
 						case "/s":case "-s":case "--split":
-							options.Split = true;
+							options.PCS_Split = true;
 							en.MoveNext();
-							options.SplitDelay = Double.Parse(en.Current, CultureInfo.InvariantCulture);
+							options.PCS_SplitDelay = Double.Parse(en.Current, CultureInfo.InvariantCulture);
 							break;
 						case "/f":case "-f":case "--filter":
-							options.Filter = true;
+							options.PCS_Filter = true;
 							en.MoveNext();
-							options.FilterDelay = Double.Parse(en.Current, CultureInfo.InvariantCulture);
+							options.PCS_FilterDelay = Double.Parse(en.Current, CultureInfo.InvariantCulture);
 							break;
 						case "/c":case "-c":case "--crop":
-							options.Crop = true;
+							options.PCS_Crop = true;
 							en.MoveNext();
 							int sim = Int32.Parse(en.Current, CultureInfo.InvariantCulture);
 							if(sim == -1) sim = Int32.MaxValue;
-							options.CropSimilarity = sim;
+							options.PCS_CropSimilarity = sim;
 							break;
 						case "/l":case "-l":case "--length":
-							options.TrimLength = true;
+							options.PCS_TrimLength = true;
 							en.MoveNext();
-							options.NewLength = Int32.Parse(en.Current, CultureInfo.InvariantCulture);
+							options.PCS_NewLength = Int32.Parse(en.Current, CultureInfo.InvariantCulture);
 							break;
 						case "/d":case "-d":case "--delay":
 							options.DRO_EndDelay = 200;
@@ -137,9 +137,9 @@ namespace speakerconv
 							options.MultiChannel = true;
 							break;
 						case "/r":case "-r":case "--repeat":
-							options.Repeat = true;
+							options.PCS_Repeat = true;
 							en.MoveNext();
-							options.RepeatCount = Int32.Parse(en.Current, CultureInfo.InvariantCulture);
+							options.PCS_RepeatCount = Int32.Parse(en.Current, CultureInfo.InvariantCulture);
 							break;
 						case "/in":case "-in":case "--input-type":
 							en.MoveNext();
@@ -159,6 +159,13 @@ namespace speakerconv
 						case "/w:r":case "-w:r":case "--wave-sample-rate":
 							en.MoveNext();
 							options.Wave_Frequency = Int32.Parse(en.Current, CultureInfo.InvariantCulture);
+							break;
+						case "--sanitize":
+							options.PCS_Sanitize = true;
+							break;
+						case "--clicks":
+							en.MoveNext();
+							options.ClickLength = Double.Parse(en.Current, CultureInfo.InvariantCulture);
 							break;
 						case "?":case "/?":case "-?":case "/h":case "-h":case "--help":
 							throw helpException;
@@ -224,7 +231,7 @@ namespace speakerconv
 		{
 			var files = InputProcessors[options.InputType].ProcessFile(options.InputPath, options);
 			
-			var output = files.Where(f => !options.Filter || f.Data.Sum(cmd => cmd.Type == RPCCommandType.Delay ? cmd.Data : 0) > options.FilterDelay*1000);
+			var output = files.Where(f => !options.PCS_Filter || f.Data.Sum(cmd => cmd.Type == RPCCommandType.Delay ? cmd.Data : 0) > options.PCS_FilterDelay*1000);
 			OutputProcessors[options.OutputType].ProcessFiles(output, options);
 		}
 	}
@@ -241,38 +248,44 @@ namespace speakerconv
 			}
 		}
 		
-		public bool Trim{get;set;}
-		public bool Split{get;set;}
-		public double SplitDelay{get;set;}
-		public bool Crop{get;set;}
-		public int CropSimilarity{get;set;}
-		public bool Filter{get;set;}
-		public double FilterDelay{get;set;}
+		//Prefix is used to denote where the option is handled.
+		//PCS - LoadPCS
+		//DRO - SaveDRO
+		public bool PCS_Trim{get;set;}
+		public bool PCS_Split{get;set;}
+		public double PCS_SplitDelay{get;set;}
+		public bool PCS_Crop{get;set;}
+		public int PCS_CropSimilarity{get;set;}
+		public bool PCS_Filter{get;set;}
+		public double PCS_FilterDelay{get;set;}
 		
-		public bool TrimLength{get;set;}
-		public int NewLength{get;set;}
+		public bool PCS_TrimLength{get;set;}
+		public int PCS_NewLength{get;set;}
 		
 		public bool MultiChannel{get;set;}
 		
-		public bool Repeat{get;set;}
-		public int RepeatCount{get;set;}
+		public bool PCS_Repeat{get;set;}
+		public int PCS_RepeatCount{get;set;}
 		
 		public bool Optimize{get;set;}
 		public List<DROCommand> DRO_PrefixCommands{get;private set;}
 		public int? Waveform{get;set;}
-		public int DRO_EndDelay{get;set;}
+		public int DRO_EndDelay{get;set;} //TODO: handle also in Beep and WAV outputs
 		
 		public double? Wave_Volume{get;set;}
 		public bool? Wave_Clip{get;set;}
 		public int? Wave_Frequency{get;set;}
 		
+		public bool PCS_Sanitize{get;set;}
+		public double? ClickLength{get;set;}
+		
 		public ConvertOptions()
 		{
 			InputType = "pcs";
 			OutputType = "dro";
-			SplitDelay = Double.MaxValue;
-			CropSimilarity = Int32.MaxValue;
-			FilterDelay = 0.0;
+			PCS_SplitDelay = Double.MaxValue;
+			PCS_CropSimilarity = Int32.MaxValue;
+			PCS_FilterDelay = 0.0;
 			Optimize = true;
 			DRO_PrefixCommands = new List<DROCommand>();
 		}

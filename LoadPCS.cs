@@ -175,7 +175,7 @@ namespace speakerconv
 						}else if(!informed)
 						{
 							informed = true;
-							Console.WriteLine("Input contains frequencies outside the hearing range, use --sanitize to remove them.");
+							Console.WriteLine("Input contains frequencies ({0}) outside the standard range, use --sanitize to remove them.", 1193180/cmd.Data);
 						}
 					}
 				}

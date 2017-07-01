@@ -21,15 +21,16 @@ namespace speakerconv
 {
 	partial class Program
 	{
-		static readonly Dictionary<string, IInputProcessor> InputProcessors = new Dictionary<string, IInputProcessor>{
+		internal static readonly Dictionary<string, IInputProcessor> InputProcessors = new Dictionary<string, IInputProcessor>{
 			{"pcs", new LoadPCS()},
 			{"mdt", new LoadMDT()},
 			{"bin", new LoadMDT()},
 			{"txt", new LoadTXT()},
 			{"dp", new LoadSaveDP()},
+			{"qplay", new LoadPathQPlay()},
 		};
 		
-		static readonly Dictionary<string, IOutputProcessor> OutputProcessors = new Dictionary<string, IOutputProcessor>{
+		internal static readonly Dictionary<string, IOutputProcessor> OutputProcessors = new Dictionary<string, IOutputProcessor>{
 			{"dro", new SaveDRO()},
 			{"beep", new PlayBeep()},
 			{"play", new PlayWAV()},
@@ -37,6 +38,10 @@ namespace speakerconv
 			{"droplay", new PlayDRO()},
 			{"txt", new SaveTXT()},
 			{"dp", new LoadSaveDP()},
+		};
+		
+		internal static readonly Dictionary<string, IPathProcessor> PathProcessors = new Dictionary<string, IPathProcessor>{
+			{"qplay", new LoadPathQPlay()},
 		};
 		
 		public static void Main(string[] args)
@@ -66,13 +71,13 @@ namespace speakerconv
 			//new WaveWriter().WriteWave(new FileStream("wave.wav", FileMode.Create), new WavePlayer().CreateWave(song));
 			Console.ReadKey(true);
 			return;*/
+			
 			var ass = Assembly.GetExecutingAssembly().GetName();
 			Console.WriteLine(ass.Name+" "+ass.Version.ToString(2)+" (c) 2013 - 2016 by IllidanS4@gmail.com");
 			var options = ReadArguments(args);
 			if(options == null) return;
 			foreach(var option in options.GetInputs())
 			{
-				
 				ProcessInput(option);
 			}
 		}
@@ -167,6 +172,9 @@ namespace speakerconv
 							en.MoveNext();
 							options.ClickLength = Double.Parse(en.Current, CultureInfo.InvariantCulture);
 							break;
+						case "--temper":
+							options.AutoTemper = true;
+							break;
 						case "?":case "/?":case "-?":case "/h":case "-h":case "--help":
 							throw helpException;
 						default:
@@ -185,7 +193,9 @@ namespace speakerconv
 				}
 				if(options.InputPath == null) throw new ArgumentException("No path argument given.");
 				if(options.OutputPath == null) options.OutputPath = Path.ChangeExtension(options.InputPath, options.Extension);
-				if(!File.Exists(options.InputPath)) throw new ArgumentException("Invalid path.");
+				
+				IPathProcessor pathProc;
+				if(!(PathProcessors.TryGetValue(options.InputType, out pathProc) && pathProc.IsValidPath(options.InputPath)) && !File.Exists(options.InputPath)) throw new ArgumentException("Invalid path.");
 			}catch(Exception ex)
 			{
 				if(ex == helpException)
@@ -210,6 +220,7 @@ namespace speakerconv
 					Console.WriteLine(" mdt/bin - Binary output from MIDITONES.");
 					Console.WriteLine(" txt - simple RPC commands.");
 					Console.WriteLine(" dp - Doom PC Speaker.");
+					Console.WriteLine(" qplay - QBasic PLAY command argument (put directly in input path).");
 					Console.WriteLine("Output types:");
 					Console.WriteLine(" dro - DOSBox Raw OPL.");
 					Console.WriteLine(" droplay - DRO and plays it with 'dro_player' (needs to be available).");
@@ -278,6 +289,7 @@ namespace speakerconv
 		
 		public bool PCS_Sanitize{get;set;}
 		public double? ClickLength{get;set;}
+		public bool AutoTemper{get;set;}
 		
 		public ConvertOptions()
 		{
@@ -292,7 +304,16 @@ namespace speakerconv
 		
 		public IEnumerable<ConvertOptions> GetInputs()
 		{
-			foreach(string file in Directory.EnumerateFiles(Path.GetDirectoryName(Path.GetFullPath(InputPath)), Path.GetFileName(InputPath)))
+			IEnumerable<string> files;
+			IPathProcessor pathProc;
+			if(Program.PathProcessors.TryGetValue(InputType, out pathProc))
+			{
+				files = pathProc.GetInputs(InputPath);
+			}else{
+				files = Directory.EnumerateFiles(Path.GetDirectoryName(Path.GetFullPath(InputPath)), Path.GetFileName(InputPath));
+			}
+			
+			foreach(string file in files)
 			{
 				ConvertOptions newOptions = (ConvertOptions)this.Clone();
 				newOptions.InputPath = file;

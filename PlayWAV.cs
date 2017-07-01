@@ -14,7 +14,7 @@ namespace speakerconv
 			Console.WriteLine(file.Path);
 			Console.WriteLine(TimeSpan.FromMilliseconds(file.Data.Sum(cmd => cmd.DelayValue)));
 			Console.WriteLine("Creating WAV...");
-			var song = SaveWAV.CreateSong(file.Data, SaveWAV.GetWaveform(options), options.Wave_Volume??1.0, options.Wave_Clip??false, options.Wave_Frequency??44100, options.ClickLength);
+			var song = SaveWAV.CreateSong(file.Data, SaveWAV.GetWaveform(options), options.Wave_Volume??1.0, options.Wave_Clip??false, options.Wave_Frequency??44100, options.ClickLength, options.AutoTemper);
 			Console.WriteLine("Playing...");
 	        using(var buffer = new MemoryStream())
 	        {

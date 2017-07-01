@@ -17,7 +17,7 @@ namespace speakerconv
 			using(var stream = new FileStream(file.Path, FileMode.Create))
 			{
 				Writer.SampleRate = options.Wave_Frequency??44100;
-				Writer.WriteWave(stream, CreateSong(file.Data, GetWaveform(options), options.Wave_Volume??1.0, options.Wave_Clip??false, options.Wave_Frequency??44100, options.ClickLength));
+				Writer.WriteWave(stream, CreateSong(file.Data, GetWaveform(options), options.Wave_Volume??1.0, options.Wave_Clip??false, options.Wave_Frequency??44100, options.ClickLength, options.AutoTemper));
 			}
 		}
 		
@@ -55,7 +55,7 @@ namespace speakerconv
 			}
 		}
 		
-		public static short[] CreateSong(IList<RPCCommand> data, WaveFunction waveType, double volume, bool clip, int frequency, double? clickLength)
+		public static short[] CreateSong(IList<RPCCommand> data, WaveFunction waveType, double volume, bool clip, int frequency, double? clickLength, bool temper)
 		{
 			var song = new WaveSong();
 			song.NoClipping = !clip;
@@ -75,6 +75,10 @@ namespace speakerconv
 						break;
 					case RPCCommandType.SetCountdown:
 						double freq = LoadMDT.CountdownToFrequency(cmd.Data);
+						if(temper)
+						{
+							freq = TemperFrequency(freq);
+						}
 						if(!channels.TryGetValue(cmd.Channel, out playing) || playing.Wave.Frequency != freq)
 						{
 							double phase = 0;
@@ -116,6 +120,13 @@ namespace speakerconv
 				playing.Wave.Duration = time-playing.Start;
 			}
 			return song.GetSamples<short>(frequency);
+		}
+		
+		const double noteBase = 1.0594630943592952645618252949463;
+		public static double TemperFrequency(double freq)
+		{
+			double note = Math.Log(freq/440, noteBase)+49;
+			return Math.Pow(noteBase, Math.Round(note)-49)*440;
 		}
 	}
 }

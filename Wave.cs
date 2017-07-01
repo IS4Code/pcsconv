@@ -311,7 +311,7 @@ namespace IllidanS4.Wave
 				return vol;
 			}
 			set{
-				if(value < 0 || value > 1) throw new ArgumentOutOfRangeException("value");
+				if(value < 0) throw new ArgumentOutOfRangeException("value");
 				vol = value;
 			}
 		}
@@ -405,6 +405,8 @@ namespace IllidanS4.Wave
 			double rateDouble = sampleRate;
 	        foreach(var wave in Waves)
 	        {
+	        	if(wave.Wave.Duration == 0.0 || wave.Wave.Volume == 0.0) continue;
+	        	
 	        	int sampleStart = (int)Math.Ceiling(wave.Start/1000.0*sampleRate);
 	        	int sampleLength = (int)Math.Floor(wave.Wave.Duration/1000.0*sampleRate);
 	        	sampleLength = Math.Min(sampleLength, samples.Length-sampleStart);
@@ -416,9 +418,11 @@ namespace IllidanS4.Wave
 	        }
 		}
 		
-		public void AddWave(int start, Wave wave)
+		public Track AddWave(int start, Wave wave)
 		{
-			Waves.Add(new Track(start, wave));
+			var track = new Track(start, wave);
+			Waves.Add(track);
+			return track;
 		}
 		
 		public new double Duration{
